@@ -38,12 +38,12 @@ const FilesystemStorage = {
   ) =>
     RNFetchBlob.fs.readFile(pathForKey(options.toFileName(key)), options.encoding)
       .then(data => {
-        callback && callback(null, data)
-        if (!callback) return data
+        if (!callback) return data;
+        callback(null, data.toString());
       })
       .catch(error => {
-        callback && callback(error)
-        if (!callback) throw error
+        if (!callback) throw error;
+        callback(error);
       }),
 
   removeItem: (
@@ -53,8 +53,8 @@ const FilesystemStorage = {
     RNFetchBlob.fs.unlink(pathForKey(options.toFileName(key)))
       .then(() => callback && callback())
       .catch(error => {
-        callback && callback(error)
-        if (!callback) throw error
+        if (!callback) throw error;
+        callback(error);
       }),
 
   getAllKeys: (
@@ -66,42 +66,39 @@ const FilesystemStorage = {
     )
     .then(() =>
       RNFetchBlob.fs.ls(options.storagePath)
-        .then(files => files.map(file => options.fromFileName(file)))
+        .then(files => files.map<string>((file) => options.fromFileName(file)))
         .then(files => {
-          callback && callback(null, files)
           if (!callback) return files
+          callback(null, files)
         })
     )
     .catch(error => {
-      callback && callback(error)
       if (!callback) throw error
+      callback(error)
     }),
-}
 
-FilesystemStorage.clear = (
-  callback: (error: ?Error) => void,
-) =>
-  FilesystemStorage.getAllKeys((error, keys) => {
-    if (error) throw error
-
-    if (Array.isArray(keys) && keys.length) {
-      const removedKeys = []
-
-      keys.forEach(key => {
-        FilesystemStorage.removeItem(key, (error: ?Error) => {
-          removedKeys.push(key)
-          if (error && callback) callback(error, false)
-          if (removedKeys.length === keys.length && callback) callback(null, true)
+  clear: (
+    callback: (error: ?Error, removed: ?boolean) => void,
+  ) =>
+    FilesystemStorage.getAllKeys((error, keys) => {
+      if (error) throw error
+  
+      if (Array.isArray(keys) && keys.length) {
+        const removedKeys = []
+  
+        keys.forEach(key => {
+          FilesystemStorage.removeItem(key, (error: ?Error) => {
+            removedKeys.push(key)
+            if (error && callback) callback(error, false)
+            if (removedKeys.length === keys.length && callback) callback(null, true)
+          })
         })
-      })
-      return true
-    }
-
-    callback && callback(null, false)
-    return false
-  }).catch(error => {
-    callback && callback(error)
-    if (!callback) throw error
-  })
+      }
+      callback && callback(null, false)
+    }).catch(error => {
+      if (!callback) throw error
+      callback(error)
+    })
+}
 
 export default FilesystemStorage

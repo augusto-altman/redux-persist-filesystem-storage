@@ -9,7 +9,11 @@
   },
   "author": "Rob Walker",
   "license": "MIT",
+  "scripts": {
+    "flow": "flow"
+  },
   "dependencies": {
+    "flow-bin": "^0.100.0",
     "rn-fetch-blob": "^0.10.0"
   }
 }
